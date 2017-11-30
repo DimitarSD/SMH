@@ -1,0 +1,31 @@
+#title {
+    font-size: 45px;
+    font-family: 'Avenir-Book';
+    text-align: center;
+}
+
+.blank_row {
+    height: 35px !important; /* overwrites any other rules */
+}
+
+.balance-info {
+    color: darkblue;
+    font-family: 'Avenir-Medium';
+    font-size: 14px;
+}
+
+.address {
+    font-family: 'Avenir-Black'
+}
+
+#footer-custom {
+    font-family: 'Avenir-Book';
+    font-size: 14px;
+    color: darkgray;
+}
+
+#info {
+    font-family: 'Avenir-Book';
+    font-size: 12px;
+    color: red;
+}

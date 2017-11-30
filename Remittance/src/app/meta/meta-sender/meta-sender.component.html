@@ -1,0 +1,193 @@
+<div class="container">
+  <div class="row blank_row"></div>
+  <div class="row">
+    <div class="col-md-12">
+      <h2>
+        Remittance
+      </h2>
+    </div>
+  </div>
+  <div class="row">
+      <div class="col-md-12">
+        Current block: {{model.block}}
+      </div>
+  </div>
+  <div class="row">
+      <div class="col-md-12" id="info">
+          Info: Scroll down for testing accounts and password generator :)
+      </div>
+  </div>
+  <div class="row blank_row"></div>
+
+  <!-- Deposit -->
+  <div class="row">
+    <div class="col-md-12">
+      <h4>Add Deposit</h4>
+    </div>
+  </div>
+
+  <div class="row">
+      <div class="col-md-4">
+          <input class="form-control" type="number" min="1" max="100" id="amount" placeholder="Deposit amount - ETH" (change)="setAmount($event)">
+      </div>
+      <div class="col-md-4 address">
+          <input class="form-control" type="text" id="masterPasswordHash" placeholder="Master Password Hash" (change)="setMasterPasswordHash($event)">
+      </div>
+      <div class="col-md-4 address">
+          <button type="button" id="send" class="btn btn-primary btn-md" (click)="depositMoney()">Deposit Money</button>
+      </div>
+  </div>
+  <div class="row blank_row"></div>
+
+  <div class="card">
+      <div class="card-header card-success" style="color: white;">Executed deposits</div>
+      <div class="card-block">
+        <table class="table">
+            <thead>
+                <tr>
+                  <th>Id</th>
+                  <th>Depositor</th>
+                  <th>Amount - ETH</th>
+                  <th>Deadline (in blocks)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <ng-container *ngFor="let deposit of model.executedDeposits; let i = index">
+                        <tr>
+                            <td>({{i}})</td>
+                            <td>{{deposit.senderAddress}}</td>
+                            <td>{{deposit.amountSent}}</td>
+                            <td>{{deposit.deadline}}</td>
+                        </tr>
+                </ng-container>
+            </tbody>
+        </table>
+      </div>
+  </div>
+
+  <div class="row blank_row"></div>
+  <div class="row blank_row"></div>
+  
+    <!-- Withdraw -->
+    <div class="row">
+      <div class="col-md-12">
+        <h4>Withdraw</h4>
+      </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3 address">
+            <input class="form-control" type="text" id="receiverAddress" placeholder="Receiver Address" (change)="setReceiverAddress($event)">
+        </div>
+        <div class="col-md-3">
+            <input class="form-control" type="text" id="passwordOneHash" placeholder="Password One Hash" (change)="setPasswordOneHash($event)">
+        </div>
+        <div class="col-md-3 address">
+            <input class="form-control" type="text" id="passwordTwoHash" placeholder="Password Two Hash" (change)="setPasswordTwoHash($event)">
+        </div>
+        <div class="col-md-3 address">
+            <button type="button" id="send" class="btn btn-danger btn-md" (click)="withdrawdMoney()">Withdraw Money</button>
+        </div>
+    </div>
+    <div class="row blank_row"></div>
+
+    <div class="card ">
+        <div class="card-header card-success" style="color: white;">Executed Withdraws</div>
+        <div class="card-block">
+          <table class="table">
+              <thead>
+                  <tr>
+                    <th>Id</th>
+                    <th>Receiver</th>
+                    <th>Amount Received - ETH</th>
+                  </tr>
+              </thead>
+              <tbody>
+                    <ng-container *ngFor="let withdraw of model.executedWithdraws; let i = index">
+                            <tr>
+                                <td>({{i}})</td>
+                                <td>{{withdraw.receiverAddress}}</td>
+                                <td>{{withdraw.amountReceived}}</td>
+                            </tr>
+                    </ng-container>
+              </tbody>
+          </table>
+        </div>
+    </div>
+
+    <div class="row blank_row"></div>
+    <!-- Accounts -->
+    <div class="row">
+        <div class="col-md-12">
+          <h4>Available Accounts (for testing)</h4>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header card-warning" style="color:white">Note: We use the first address - (0) as Sender. He create all deposits</div>
+        <div class="card-block">
+          <table class="table">
+              <thead>
+                  <tr>
+                    <th>Id</th>
+                    <th>Address</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <ng-container *ngFor="let account of model.accounts; let i = index">
+                      <tr>
+                          <td>({{i}})</td>
+                          <td>{{account}}</td>
+                      </tr>
+                  </ng-container>
+              </tbody>
+          </table>
+        </div>
+    </div>
+
+    <div class="row blank_row"></div>
+    <!-- Password Generator -->
+    <div class="row">
+        <div class="col-md-12">
+          <h4>Password Hash Generator</h4>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header card-warning" style="color:white">Use this generator to generate your password hashes</div>
+        <div class="card-block">
+            <div class="row">
+                <div class="col-md-4">
+                    <input class="form-control" type="text" id="passwordOne" placeholder="Enter your password 1" (change)="encryptPasswordOne($event)">
+                </div>
+                <div class="col-md-4 address">
+                    <input class="form-control" type="text" id="passwordTwo" placeholder="Enter your password 2" (change)="encryptPasswordTwo($event)">
+                </div>
+                <div class="col-md-4 address">
+                    <button type="button" id="send" class="btn btn-primary btn-md" (click)="generateHashes()">Generate Hashes</button>
+                </div>
+            </div>
+
+            <div class="row blank_row"></div>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <td>Password 1 Hash</td>
+                        <td>{{model.passwordOneHash}}</td>
+                    </tr>
+                    <tr>
+                        <td>Password 2 Hash</td>
+                        <td>{{model.passwordTwoHash}}</td>
+                    </tr>
+                    <tr>
+                        <td>Master Password Hash</td>
+                        <td>{{model.masterPasswordHash}}</td>
+                    </tr>
+                </tbody>
+             </table>
+        </div>
+    </div>
+
+    <div class="row blank_row"></div>
+    <div class="row blank_row"></div>
+</div>
