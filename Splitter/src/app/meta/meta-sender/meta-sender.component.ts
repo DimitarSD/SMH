@@ -51,7 +51,7 @@ export class MetaSenderComponent implements OnInit {
     let firstRecipient = this.model.firstRecipientAddress;
     let secondRecipient = this.model.secondRecipientAddress;
 
-    if (amount <= 0 || firstRecipient == '' || secondRecipient == '') {
+    if (amount <= 0 || !firstRecipient || !secondRecipient) {
       console.log('Invalid data. Can\'t send money');
 
       return;
