@@ -826,9 +826,14 @@
     "1512079140239": {
       "events": {},
       "links": {},
-      "address": "0x60da4bb4de5815c8b9661cb9d58c6b3685d45f3d"
+      "address": "0xecee7f1890d46976ee11c66ac0e2bdfc4c8b6559"
+    },
+    "1512156676326": {
+      "events": {},
+      "links": {},
+      "address": "0xd1fc9fe0de8ac6a38247360c2bd6b598eded197b"
     }
   },
   "schemaVersion": "1.0.1",
-  "updatedAt": "2017-12-01T00:50:28.718Z"
+  "updatedAt": "2017-12-01T19:53:19.422Z"
 }

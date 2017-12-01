@@ -56,6 +56,7 @@ export class MetaSenderComponent implements OnInit {
       this.sender = accounts[0];
     });
 
+    this.updateUI();
   }
 
   updateUI() {
