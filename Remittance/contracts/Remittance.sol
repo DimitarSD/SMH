@@ -38,7 +38,7 @@ contract Remittance {
     }
 
     function withdraw(bytes32 passwordOneHash, bytes32 passwordTwoHash) public payable returns (bool success) {
-        bytes32 masterPasswordHash = keccak256(passwordOneHash, passwordTwoHash);
+        bytes32 masterPasswordHash = hashPasswords(passwordOneHash, passwordTwoHash);
         Deposit storage currentDeposit = deposits[masterPasswordHash];
 
         require(currentDeposit.amount > 0);
@@ -61,6 +61,10 @@ contract Remittance {
         currentDeposit.amount = 0;
 
         return true;
+    }
+
+    function hashPasswords(bytes32 passwordOneHash, bytes32 passwordTwoHash) public constant returns (bytes32) {
+        return keccak256(passwordOneHash, passwordTwoHash);
     }
 
     function kill() public returns (bool success) {

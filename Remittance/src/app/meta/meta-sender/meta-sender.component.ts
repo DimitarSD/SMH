@@ -14,9 +14,6 @@ export class MetaSenderComponent implements OnInit {
 
   sender: string;
 
-  executedDeposits: Deposit[];
-  executedWithdraws: Withdraw[];
-
   // Password Generator Text Fields
   passwordOneInputValue: string;
   passwordTwoInputValue: string;
@@ -41,8 +38,6 @@ export class MetaSenderComponent implements OnInit {
   };
 
   constructor(private web3Service: Web3Service) {
-    this.executedDeposits = [];
-    this.executedWithdraws = [];
   }
 
   ngOnInit(): void {
@@ -59,18 +54,12 @@ export class MetaSenderComponent implements OnInit {
       this.model.accounts = accounts;
       this.accounts = accounts;
       this.sender = accounts[0];
-      console.log(accounts);
-
-      this.refresh();
     });
 
   }
 
-  async refresh() {
+  updateUI() {
     this.getCurrentBlockNumber();
-
-    this.model.executedDeposits = this.executedDeposits;
-    this.model.executedWithdraws = this.executedWithdraws;
   }
 
   private encryptPasswordOne(e) {
@@ -81,16 +70,19 @@ export class MetaSenderComponent implements OnInit {
     this.passwordTwoInputValue = e.target.value;
   }
 
-  private generateHashes() {
+  private async generateHashes() {
     if (!this.passwordOneInputValue || !this.passwordTwoInputValue) {
       alert('Please add password');
       return;
     }
 
-    this.model.passwordOneHash = this.web3Service.encryptPassword(this.passwordOneInputValue);
-    this.model.passwordTwoHash = this.web3Service.encryptPassword(this.passwordTwoInputValue);
+    var hashedPasswordOne = this.web3Service.encryptPassword(this.passwordOneInputValue);
+    var hashedPasswordTwo = this.web3Service.encryptPassword(this.passwordTwoInputValue);
 
-    this.model.masterPasswordHash = this.web3Service.encryptPasswords(this.model.passwordOneHash, this.model.passwordTwoHash);
+    this.model.passwordOneHash = hashedPasswordOne;
+    this.model.passwordTwoHash = hashedPasswordTwo;
+
+    this.getMasterPasswordHash(hashedPasswordOne, hashedPasswordTwo);
   }
 
   private setAmount(e) {
@@ -111,18 +103,54 @@ export class MetaSenderComponent implements OnInit {
       var remittance = await this.Remittance.deployed();
       remittance.deposit(this.masterPasswordTextFieldValue, {from: this.sender, value: parseInt(this.depositAmountTextFieldValue), gas: 1000000});
 
-      remittance.LogDeposit({}, {fromBlock: 0 }).watch((error, result) => {
-        var currentDeposit: Deposit = {
-          senderAddress: result.args.depositor,
-          amountSent: result.args.amount,
-          deadline: result.args.deadline
-        };
-
-        this.executedDeposits.push(currentDeposit);
-        this.refresh();
+      remittance.LogDeposit({}, {fromBlock: 0}).watch((error, result) => {
+        if (error) {
+          console.log('Error LogDeposit = ', error);
+        } else {
+          var currentDeposit: Deposit = {
+            senderAddress: result.args.depositor,
+            amountSent: result.args.amount.toString(10),
+            deadline: result.args.deadline.toString(10)
+          };
+  
+          if (this.model.executedDeposits.findIndex(x => x.senderAddress === currentDeposit.senderAddress
+             && x.amountSent === currentDeposit.amountSent && x.deadline === currentDeposit.deadline) < 0) {
+              this.model.executedDeposits.push(currentDeposit);
+          }
+        }
       });
     } catch(error) {
       console.log('Error (Deposit Money) = ', error);
+    }
+  }
+
+  private async withdrawdMoney() {
+    if (!this.receiverAddressTextFieldValue || !this.passwordOneHashTextFieldValue || !this.passwordTwoHashTextFieldValue) {
+      alert('Please, fill in all text fields');
+      return;
+    }
+    
+    try {
+      var remittance = await this.Remittance.deployed();
+      remittance.withdraw(this.passwordOneHashTextFieldValue, this.passwordTwoHashTextFieldValue, {from: this.receiverAddressTextFieldValue, gas: 100000});
+
+      remittance.LogWithdraw({}, {fromBlock: 0}).watch((error, result) => {
+        if (error) {
+          console.log('Error LogWithdraw = ', error);
+        } else {
+          var currentWithdraw: Withdraw = {
+            receiverAddress: result.args.receiver,
+            amountReceived: result.args.receivedAmount.toString(10)
+          };
+          
+          if (this.model.executedWithdraws.findIndex(x => x.receiverAddress === currentWithdraw.receiverAddress
+            && x.amountReceived === currentWithdraw.amountReceived < 0)) {
+              this.model.executedWithdraws.push(currentWithdraw);
+         }
+        }
+      });
+    } catch (error) {
+      console.log('Error (Withdraw Money) = ', error);
     }
   }
 
@@ -137,45 +165,29 @@ export class MetaSenderComponent implements OnInit {
   private setPasswordTwoHash(e) {
     this.passwordTwoHashTextFieldValue = e.target.value;
   }
-
-  private async withdrawdMoney() {
-    if (!this.receiverAddressTextFieldValue || !this.passwordOneHashTextFieldValue || !this.passwordTwoHashTextFieldValue) {
-      alert('Please fill all text fields');
-      return;
-    }
-
-    var masterPassword = this.web3Service.encryptPasswords(this.passwordOneHashTextFieldValue, this.passwordTwoHashTextFieldValue);
-
-    try {
-      var remittance = await this.Remittance.deployed();
-      remittance.withdraw(masterPassword, {from: this.receiverAddressTextFieldValue, gas: 100000});
-
-      remittance.LogWithdraw({}, {fromBlock: 0}).watch((error, result) => {
-        var currentWithdraw: Withdraw = {
-          receiverAddress: result.args.receiver,
-          amountReceived: result.args.receivedAmount.toString(10)
-        };
-        console.log(currentWithdraw);
-        this.executedWithdraws.push(currentWithdraw);
-        this.refresh();
-      });
-
-    } catch (error) {
-      console.log('Error (Withdraw Money) = ', error);
-    }
-  }
   
+  // Helpers
   private getCurrentBlockNumber() {
     this.web3Service.getBlockNumber().then((number) => {
       this.model.block = number;
+    });
+  }
+
+  private async getMasterPasswordHash(hashedPasswordOne, hashedPasswordTwo) {
+    var remittance = await this.Remittance.deployed();
+
+    remittance.hashPasswords(hashedPasswordOne, hashedPasswordTwo)
+    .then((masterPasswordHash) => {
+      this.model.masterPasswordHash = masterPasswordHash;
+      console.log('Master Password 1 = ', masterPasswordHash);
     });
   }
 }
 
 type Deposit = {
   senderAddress: string;
-  amountSent: number;
-  deadline: number;
+  amountSent: string;
+  deadline: string;
 };
 
 type Withdraw = {
