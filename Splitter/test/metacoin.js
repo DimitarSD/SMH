@@ -53,16 +53,52 @@ contract('Splitter', function (accounts) {
     });
   });
 
-  // it('sender should get +1 if amount is odd number', () => {
-  //   return instance.sendMoney(recipientOne, recipientTwo, {from: sender, value: amountSentOddNumber})
-  //   .then(transaction => {
-  //     return instance.showBalance(sender);
-  //   })
-  //   .then(balance => {
-  //     assert.equal(balance), amountOne, "should get half");
-  //   });
-  // });
+  it('sender should get +1 if amount is odd number', () => {
+    return instance.sendMoney(recipientOne, recipientTwo, {from: sender, value: amountSentOddNumber})
+    .then(transaction => {
+      return instance.showBalance(sender);
+    })
+    .then(balance => {
+      assert.equal(balance.toString(10), amountOne, "should get half");
+    });
+  });
 
+  it('should withdraw money', async () => {
+    await instance.sendMoney(recipientOne, recipientTwo, {from: sender, value: amountSent})
+
+    return instance.withdrawMoney({from: recipientOne})
+    .then(transaction => {
+      return getEventsPromise(instance.LogMoneyWithdraw(sender, amountSentHalf));
+    })
+    .then(event => {
+      const eventArgs = event[0].args;
+      assert.equal(eventArgs.sender.valueOf(), recipientOne, "should be sender");
+      assert.equal(eventArgs.amount, amountSentHalf, "should be the sent amount");
+      return;
+    });
+  });
+
+  it('withdraw should fail if balance is empty', async () => {
+    await instance.sendMoney(recipientOne, recipientTwo, {from: sender, value: amountSent});
+
+    try {
+      await instance.withdrawMoney({from: sender})
+      assert.fail('should have thrown before');
+    } catch(error) {
+      assertJump(error, 'Exception while processing transaction: revert', 'Exception while processing transaction: revert error must be returned');
+    }
+  });
+
+  it('kill switch should fail if it is not executed by owner', async () => {
+    let invalidOwner = recipientOne;
+
+    try {
+      await instance.kill({from: invalidOwner});
+      assert.fail('should have thrown before');
+    } catch(error) {
+      assertJump(error, 'Exception while processing transaction: revert', 'Exception while processing transaction: revert error must be returned');
+    }
+  });
 });
 
 function assertJump(error, search, message) {

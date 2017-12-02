@@ -21,7 +21,7 @@ contract Splitter {
         uint amountSent = msg.value;
 
         if (amountSent % 2 != 0) {
-            accounts[owner] += 1;
+            accounts[msg.sender] += 1;
             amountSent -= 1;
         }
 
