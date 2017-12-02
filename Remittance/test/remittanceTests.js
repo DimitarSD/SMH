@@ -22,23 +22,18 @@ contract('Remittance', function(accounts) {
   let invalidPasswordOneHash = '0xb98cdd595ac98e345ebc42ff56fc0d3fa51ce443ed2bd3a9f710446a1f816945';
   let invalidPasswordTwoHash = '0x9f0d101f10cb16264e2fd1980e2763494c4d1725c8b40680249025a5f8b8fb74';
 
-  beforeEach(() => {
-    return Remittance.new(deadline).then(thisInstance => {
-        instance = thisInstance;
-    });
+  beforeEach(async () => {
+    let thisInstance = await Remittance.new(deadline);
+    instance = thisInstance;
   });
 
-  it('should create new deposit', () => {
-    return instance.deposit(masterPasswordHash, {from: sender, value: amountSent})
-    .then(transaction => {
-      return getEventsPromise(instance.LogDeposit(sender, amountSent, deadline));
-    })
-    .then((event) => {
-      const eventArgs = event[0].args;
-      assert.equal(eventArgs.depositor.valueOf(), sender, "should be sender");
-      assert.equal(eventArgs.amount, amountSent, "should be the sent amount");
-      return;
-    });
+  it('should create new deposit', async () => {
+    await instance.deposit(masterPasswordHash, {from: sender, value: amountSent})
+    let event = await getEventsPromise(instance.LogDeposit(sender, amountSent, deadline));
+
+    const eventArgs = event[0].args;
+    assert.equal(eventArgs.depositor.valueOf(), sender, "should be sender");
+    assert.equal(eventArgs.amount, amountSent, "should be the sent amount");
   });
 
   
@@ -51,20 +46,14 @@ contract('Remittance', function(accounts) {
     }
   });
 
-  it('receiver should withdraw before deadline', () => {
-    return instance.deposit(masterPasswordHash, {from: sender, value: amountSent})
-    .then(transaction => {
-      return instance.withdraw(passwordOneHash, passwordTwoHash, {from: receiver})
-      .then(transaction => {
-        return getEventsPromise(instance.LogWithdraw(receiver, amountSent));
-      })
-      .then(event => {
-        const eventArgs = event[0].args;
-        assert.equal(eventArgs.receiver.valueOf(), receiver, "should be receiver");
-        assert.equal(eventArgs.receivedAmount, amountSent, "should be the sent amount");
-        return;
-      });
-    })
+  it('receiver should withdraw before deadline', async () => {
+    await instance.deposit(masterPasswordHash, {from: sender, value: amountSent})
+    await instance.withdraw(passwordOneHash, passwordTwoHash, {from: receiver})
+    let event = await getEventsPromise(instance.LogWithdraw(receiver, amountSent));
+
+    const eventArgs = event[0].args;
+    assert.equal(eventArgs.receiver.valueOf(), receiver, "should be receiver");
+    assert.equal(eventArgs.receivedAmount, amountSent, "should be the sent amount");
   });
 
   it('withdraw should fail when invalid passwords are used', async () => {

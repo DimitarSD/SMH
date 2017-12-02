@@ -13,25 +13,20 @@ contract('Splitter', function (accounts) {
   let amountSentHalf = 2;
   let invalidAmountSent = 0;
 
-  beforeEach(() => {
-    return Splitter.new().then(thisInstance => {
-        instance = thisInstance;
-    });
+  beforeEach(async () => {
+    let thisInstance = await Splitter.new();
+    instance = thisInstance;
   });
 
-  it('should send money', () => {
-    return instance.sendMoney(recipientOne, recipientTwo, {from: sender, value: amountSent})
-    .then(transaction => {
-      return getEventsPromise(instance.LogMoneyTransfer(sender, recipientOne, recipientTwo, amountSent));
-    })
-    .then(event => {
-      const eventArgs = event[0].args;
-      assert.equal(eventArgs.sender.valueOf(), sender, "should be sender");
-      assert.equal(eventArgs.recipientOne.valueOf(), recipientOne, "should be recipient one");
-      assert.equal(eventArgs.recipientTwo.valueOf(), recipientTwo, "should be recipient two");
-      assert.equal(eventArgs.amount, amountSent, "should be the sent amount");
-      return;
-    });
+  it('should send money', async () => {
+    await instance.sendMoney(recipientOne, recipientTwo, {from: sender, value: amountSent})
+    let event = await getEventsPromise(instance.LogMoneyTransfer(sender, recipientOne, recipientTwo, amountSent));
+    
+    const eventArgs = event[0].args;
+    assert.equal(eventArgs.sender.valueOf(), sender, "should be sender");
+    assert.equal(eventArgs.recipientOne.valueOf(), recipientOne, "should be recipient one");
+    assert.equal(eventArgs.recipientTwo.valueOf(), recipientTwo, "should be recipient two");
+    assert.equal(eventArgs.amount, amountSent, "should be the sent amount");
   });
 
   it('send money should throw when invalid amount is used', async () => {
@@ -43,39 +38,28 @@ contract('Splitter', function (accounts) {
     }
   });
 
-  it('recipients should get half', () => {
-    return instance.sendMoney(recipientOne, recipientTwo, {from: sender, value: amountSent})
-    .then(transaction => {
-      return instance.showBalance(recipientOne);
-    })
-    .then(balance => {
-      assert.equal(balance, amountSentHalf, "should get half");
-    });
+  it('recipients should get half', async () => {
+    await instance.sendMoney(recipientOne, recipientTwo, {from: sender, value: amountSent});
+    let balance = await instance.showBalance(recipientOne);
+    
+    assert.equal(balance, amountSentHalf, "should get half");
   });
 
-  it('sender should get +1 if amount is odd number', () => {
-    return instance.sendMoney(recipientOne, recipientTwo, {from: sender, value: amountSentOddNumber})
-    .then(transaction => {
-      return instance.showBalance(sender);
-    })
-    .then(balance => {
-      assert.equal(balance.toString(10), amountOne, "should get half");
-    });
+  it('sender should get +1 if amount is odd number', async () => {
+    await instance.sendMoney(recipientOne, recipientTwo, {from: sender, value: amountSentOddNumber});
+    let balance = await instance.showBalance(sender);
+    
+    assert.equal(balance.toString(10), amountOne, "should get half");
   });
 
   it('should withdraw money', async () => {
-    await instance.sendMoney(recipientOne, recipientTwo, {from: sender, value: amountSent})
-
-    return instance.withdrawMoney({from: recipientOne})
-    .then(transaction => {
-      return getEventsPromise(instance.LogMoneyWithdraw(sender, amountSentHalf));
-    })
-    .then(event => {
-      const eventArgs = event[0].args;
-      assert.equal(eventArgs.sender.valueOf(), recipientOne, "should be sender");
-      assert.equal(eventArgs.amount, amountSentHalf, "should be the sent amount");
-      return;
-    });
+    await instance.sendMoney(recipientOne, recipientTwo, {from: sender, value: amountSent});
+    await instance.withdrawMoney({from: recipientOne});
+    let event = await getEventsPromise(instance.LogMoneyWithdraw(sender, amountSentHalf));
+    
+    const eventArgs = event[0].args;
+    assert.equal(eventArgs.sender.valueOf(), recipientOne, "should be sender");
+    assert.equal(eventArgs.amount, amountSentHalf, "should be the sent amount");
   });
 
   it('withdraw should fail if balance is empty', async () => {
