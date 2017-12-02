@@ -104,7 +104,7 @@ export class MetaSenderComponent implements OnInit {
       var remittance = await this.Remittance.deployed();
       remittance.deposit(this.masterPasswordTextFieldValue, {from: this.sender, value: parseInt(this.depositAmountTextFieldValue), gas: 1000000});
 
-      remittance.LogDeposit({}, {fromBlock: 0}).watch((error, result) => {
+      remittance.LogDeposit({}, {fromBlock: 'latest'}).watch((error, result) => {
         if (error) {
           console.log('Error LogDeposit = ', error);
         } else {
@@ -135,7 +135,7 @@ export class MetaSenderComponent implements OnInit {
       var remittance = await this.Remittance.deployed();
       remittance.withdraw(this.passwordOneHashTextFieldValue, this.passwordTwoHashTextFieldValue, {from: this.receiverAddressTextFieldValue, gas: 100000});
 
-      remittance.LogWithdraw({}, {fromBlock: 0}).watch((error, result) => {
+      remittance.LogWithdraw({}, {fromBlock: 'latest'}).watch((error, result) => {
         if (error) {
           console.log('Error LogWithdraw = ', error);
         } else {
