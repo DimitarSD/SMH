@@ -171,6 +171,7 @@ export class MetaSenderComponent implements OnInit {
   private getCurrentBlockNumber() {
     this.web3Service.getBlockNumber().then((number) => {
       this.model.block = number;
+      console.log('Current block = ', number);
     });
   }
 

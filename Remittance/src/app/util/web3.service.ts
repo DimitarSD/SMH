@@ -49,7 +49,8 @@ export class Web3Service {
   }
 
   public async getBlockNumber() {
-    return await this.web3.eth.getBlockNumber((error, result) => {});
+    return await this.web3.eth.getBlockNumber((error, result) => {
+    });
   }
 
   public encryptPassword(password) {

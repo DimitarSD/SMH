@@ -7,6 +7,7 @@ contract('Remittance', function(accounts) {
 
   // Receiver
   let receiver = accounts[1];
+  let receiverWithEmptyBalance = accounts[2];
 
   // Amount
   let amountSent = 5;
@@ -50,7 +51,7 @@ contract('Remittance', function(accounts) {
     }
   });
 
-  it('should withdraw', () => {
+  it('receiver should withdraw before deadline', () => {
     return instance.deposit(masterPasswordHash, {from: sender, value: amountSent})
     .then(transaction => {
       return instance.withdraw(passwordOneHash, passwordTwoHash, {from: receiver})
@@ -70,7 +71,7 @@ contract('Remittance', function(accounts) {
     await instance.deposit(masterPasswordHash, {from: sender, value: amountSent});
 
     try {
-      await instance.withdraw(invalidPasswordOneHash, invalidPasswordTwoHash, {from: receiver})
+      await instance.withdraw(invalidPasswordOneHash, invalidPasswordTwoHash, {from: receiver});
       assert.fail('should have thrown before');
     } catch (error) {
       assertJump(error, 'Exception while processing transaction: revert', 'Exception while processing transaction: revert error must be returned');
@@ -79,12 +80,57 @@ contract('Remittance', function(accounts) {
 
   it('withdraw should fail second time after deposit is received', async () => {
     await instance.deposit(masterPasswordHash, {from: sender, value: amountSent});
-    await instance.withdraw(passwordOneHash, passwordTwoHash, {from: receiver})
+    await instance.withdraw(passwordOneHash, passwordTwoHash, {from: receiver});
 
     try {
-      await instance.withdraw(passwordOneHash, passwordTwoHash, {from: receiver})
+      await instance.withdraw(passwordOneHash, passwordTwoHash, {from: receiver});
       assert.fail('should have thrown before');
     } catch (error) {
+      assertJump(error, 'Exception while processing transaction: revert', 'Exception while processing transaction: revert error must be returned');
+    }
+  });
+
+  it('withdraw should fail when deposit amount is zero', async () => {
+    await instance.deposit(masterPasswordHash, {from: sender, value: amountSent});
+    await instance.withdraw(passwordOneHash, passwordTwoHash, {from: receiver});
+
+    try {
+      await instance.withdraw(passwordOneHash, passwordTwoHash, {from: receiverWithEmptyBalance});
+      assert.fail('should have thrown before');
+    } catch (error) {
+      assertJump(error, 'Exception while processing transaction: revert', 'Exception while processing transaction: revert error must be returned');
+    }
+  });
+
+  it('should fail when sender withdraw before deadline', async () => {
+    await instance.deposit(masterPasswordHash, {from: sender, value: amountSent});
+
+    try {
+      await instance.withdraw(passwordOneHash, passwordTwoHash, {from: sender});
+      assert.fail('should have thrown before');
+    } catch (error) {
+      assertJump(error, 'Exception while processing transaction: revert', 'Exception while processing transaction: revert error must be returned');
+    }
+  });
+
+  it('sender should withdraw after deadline', async () => {
+    await instance.deposit(masterPasswordHash, {from: sender, value: amountSent});
+
+    try {
+      await instance.withdraw(passwordOneHash, passwordTwoHash, {from: sender});
+      assert.fail('should have thrown before');
+    } catch (error) {
+      assertJump(error, 'Exception while processing transaction: revert', 'Exception while processing transaction: revert error must be returned');
+    }
+  });
+
+  it('kill switch should fail if it is not executed by owner', async () => {
+    let invalidOwner = receiver;
+
+    try {
+      await instance.kill({from: invalidOwner});
+      assert.fail('should have thrown before');
+    } catch(error) {
       assertJump(error, 'Exception while processing transaction: revert', 'Exception while processing transaction: revert error must be returned');
     }
   });
